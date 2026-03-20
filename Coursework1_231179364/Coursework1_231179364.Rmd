@@ -1,0 +1,103 @@
+---
+title: "MTH6139 Time Series" 
+subtitle: "Coursework 1: Forecasting Daily Average Temperature Using Prophet" 
+author: "Jed Bacchus" 
+date: "17/03/2026" 
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab 
+    highlight: tango
+---
+ 
+```{r, echo=FALSE}
+# This code will display the QMUL logo at the top right of the page
+# Do not change this code
+htmltools::img(src = knitr::image_uri("images/QMlogo.png"),
+               alt = 'logo',
+               style = 'position:absolute; top:0; right:0; padding:10px; width:20%;')
+```
+
+# Introduction
+
+This project uses a time series dataset of daily average temperatures from 2018 to 2021 in London to create a forecasting model using Prophet in R. The goal is to predict temperature values for the next 30 days based on the historical data.
+
+## Data Preparation
+
+```{r}
+Data =read.csv("Data/Dataset.csv")
+
+# this allowed me to import my dataset into Rstudio.
+```
+
+The dataset contains two columns:
+
+1: Date
+
+2: Mean temperature
+
+```{r}
+df = data.frame( ds = as.Date(as.character(Data$Date), format = "%Y%m%d"), y = Data$Mean.temperature)
+
+# converts the data column into the correct format to meet the requirements of The Prophet model.
+```
+
+```{r}
+head(df)
+
+# to check if it had been converted correctly.
+```
+
+## Implementing Prophet Model
+
+```{r, message=FALSE, warning=FALSE}
+library(prophet)
+m = prophet(df, yearly.seasonality = TRUE, weekly.seasonality = TRUE)
+
+# trains the model using past temperature data.
+```
+
+```{r}
+future = make_future_dataframe(m, periods = 30)
+
+# adds 30 new future days
+
+forecast <- predict(m, future)
+
+# predicts the next 30 days of average temperature values using the past data.
+```
+
+## Forecast Plot
+
+```{r}
+plot(m, forecast)
+
+# plots the forecast graph
+```
+
+The forecast plot displays both the observed temperature data and the model’s predictions over time. The black dots represent the actual recorded temperatures, which fluctuate day-to-day, creating a zig zag pattern.
+
+The blue line represents the model’s fitted values and forecast, showing a smoother trend that captures the overall pattern in the data. This includes the seasonal variation in temperature, with regular peaks and troughs over time.
+
+The shaded region represents the uncertainty interval, indicating the range in which future values are expected to lie.
+
+Overall, the model follows the observed data closely, indicating a good fit and providing a reasonable basis for forecasting future temperature values.
+
+## Component Plots
+
+```{r, warning=FALSE}
+prophet_plot_components(m, forecast)
+
+# plots the component graphs
+```
+
+The component plots break the model down into its underlying elements: trend, yearly seasonality and weekly seasonality.
+
+The trend component shows a slight increase in average temperature over the observed period from 2018 to 2021. This indicates a small but consistent rise in temperature over time. This may be consistent with broader patterns associated with global warming, however, the relatively short time span of the dataset means that it cannot be considered strong evidence on its own.
+
+The yearly seasonality component is the most significant feature of the model. It shows a clear cyclical pattern, with temperatures being lowest at the beginning and end of the year (winter months) and highest around the middle of the year (summer months). This reflects expected real world seasonal temperature variations.
+
+The weekly seasonality component appears relatively weak, with only minor fluctuations across different days of the week. This is expected as temperature does not usually vary significantly based on the day of the week.
+
+Overall, the model successfully captures the clear yearly seasonal pattern while showing only minimal weekly effects, making it ideal for forecasting short term temperature trends.
